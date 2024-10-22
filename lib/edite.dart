@@ -1,3 +1,344 @@
+// import 'dart:io';
+// import 'dart:typed_data';
+// import 'dart:ui' as ui;
+//
+// import 'package:flutter/cupertino.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter/rendering.dart';
+// import 'package:geocoding/geocoding.dart';
+// import 'package:geolocator/geolocator.dart';
+// import 'package:get/get.dart';
+// import 'package:image_picker/image_picker.dart';
+// import 'package:intl/intl.dart';
+// import 'package:path_provider/path_provider.dart';
+// import 'package:permission_handler/permission_handler.dart';
+//
+// import 'controller/switch_controller.dart';
+// import 'main.dart';
+//
+// class EditPositionScreen extends StatefulWidget {
+//   final XFile imageFile;
+//   final String logoImagePath;
+//   final String date;
+//   final String location;
+//   final Offset datePosition;
+//   final Offset locationPosition;
+//   final Offset logoPosition;
+//   final double logoSize;
+//   final double dateFontSize;
+//   final double locationFontSize;
+//   final Function(
+//     Offset datePosition,
+//     Offset locationPosition,
+//     Offset logoPosition,
+//     double dateFontSize,
+//     double locationFontSize,
+//     double logoSize,
+//   ) onPositionUpdated;
+//
+//   const EditPositionScreen({
+//     Key? key,
+//     required this.imageFile,
+//     required this.logoImagePath,
+//     required this.date,
+//     required this.location,
+//     required this.datePosition,
+//     required this.locationPosition,
+//     required this.logoPosition,
+//     required this.logoSize,
+//     required this.dateFontSize,
+//     required this.locationFontSize,
+//     required this.onPositionUpdated,
+//   }) : super(key: key);
+//
+//   @override
+//   State<EditPositionScreen> createState() => _EditPositionScreenState();
+// }
+//
+// class _EditPositionScreenState extends State<EditPositionScreen> {
+//   // Declare Rx variables for positions and sizes
+//   late Rx<Offset> _datePosition;
+//   late Rx<Offset> _locationPosition;
+//   late Rx<Offset> _logoPosition;
+//   late RxDouble _logoSize;
+//   late RxDouble _dateFontSize;
+//   late RxDouble _locationFontSize;
+//
+//   // Keys for size measurement
+//   final GlobalKey _dateKey = GlobalKey();
+//   final GlobalKey _locationKey = GlobalKey();
+//   final GlobalKey _logoKey = GlobalKey();
+//
+//   final SettingsController settingsController = Get.find<SettingsController>();
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     _datePosition = Rx<Offset>(widget.datePosition);
+//     _locationPosition = Rx<Offset>(widget.locationPosition);
+//     _logoPosition = Rx<Offset>(widget.logoPosition);
+//     _logoSize = RxDouble(widget.logoSize);
+//     _dateFontSize = RxDouble(widget.dateFontSize);
+//     _locationFontSize = RxDouble(widget.locationFontSize);
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: Colors.grey,
+//       appBar: AppBar(
+//         title: const Text("Edit Position"),
+//         actions: [
+//           IconButton(
+//             onPressed: () {
+//               // Update with positions and sizes
+//               widget.onPositionUpdated(
+//                 _datePosition.value,
+//                 _locationPosition.value,
+//                 _logoPosition.value,
+//                 _dateFontSize.value,
+//                 _locationFontSize.value,
+//                 _logoSize.value,
+//               );
+//               Navigator.pop(context);
+//             },
+//             icon: const Icon(Icons.check),
+//           ),
+//         ],
+//       ),
+//       body: Stack(
+//         children: [
+//           // Background Image
+//           Positioned.fill(
+//             bottom: 0,
+//             left: 0,
+//             right: 0,
+//             top: 0,
+//             child: Image.file(
+//               File(widget.imageFile.path),
+//               fit: BoxFit.contain,
+//             ),
+//           ),
+//           // Date
+//           Obx(() {
+//             return settingsController.showDateTime.value
+//                 ? _buildDraggableTextContainer(
+//                     key: _dateKey,
+//                     position: _datePosition.value,
+//                     text: widget.date,
+//                     fontSize: _dateFontSize.value,
+//                     onPositionChange: (newPosition) {
+//                       _datePosition.value = _constrainPosition(
+//                         newPosition,
+//                         _getSize(_dateKey),
+//                       );
+//                     },
+//                     onFontSizeChange: (delta) {
+//                       _dateFontSize.value =
+//                           (_dateFontSize.value + delta).clamp(10.0, 30.0);
+//                     },
+//                     color: settingsController.dateTextColor.value,
+//                     bgcolor: settingsController.dBackgroundColor.value,
+//                   )
+//                 : Container();
+//           }),
+//           // Location
+//           Obx(() {
+//             return settingsController.showLocation.value
+//                 ? _buildDraggableTextContainer(
+//                     key: _locationKey,
+//                     position: _locationPosition.value,
+//                     text: widget.location,
+//                     fontSize: _locationFontSize.value,
+//                     onPositionChange: (newPosition) {
+//                       _locationPosition.value = _constrainPosition(
+//                         newPosition,
+//                         _getSize(_locationKey),
+//                       );
+//                     },
+//                     onFontSizeChange: (delta) {
+//                       _locationFontSize.value =
+//                           (_locationFontSize.value + delta).clamp(12.0, 30.0);
+//                     },
+//                     color: settingsController.locationTextColor.value,
+//                     bgcolor: settingsController.lBackgroundColor.value,
+//                   )
+//                 : Container();
+//           }),
+//           // Logo
+//           Obx(() {
+//             return settingsController.showLogo.value
+//                 ? _buildDraggableLogo(key: _logoKey)
+//                 : Container();
+//           }),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildDraggableTextContainer({
+//     Key? key,
+//     required Offset position,
+//     required String text,
+//     required double fontSize,
+//     required ValueChanged<Offset> onPositionChange,
+//     required ValueChanged<double> onFontSizeChange,
+//     required Color color,
+//     required Color bgcolor,
+//   }) {
+//     return Positioned(
+//       left: position.dx,
+//       top: position.dy,
+//       child: Stack(
+//         key: key,
+//         children: [
+//           GestureDetector(
+//             onPanUpdate: (details) {
+//               onPositionChange(position + details.delta);
+//             },
+//             child: Container(
+//               padding: const EdgeInsets.all(8.0),
+//               decoration: BoxDecoration(
+//                 color: bgcolor.withOpacity(0.3),
+//                 borderRadius: BorderRadius.circular(4.0),
+//               ),
+//               child: Text(
+//                 text,
+//                 style: TextStyle(
+//                   color: color,
+//                   fontSize: fontSize,
+//                   fontWeight: FontWeight.w500,
+//                 ),
+//               ),
+//             ),
+//           ),
+//           // Resize handle
+//           Positioned(
+//             right: -10,
+//             bottom: -10,
+//             child: GestureDetector(
+//               onPanUpdate: (details) {
+//                 onFontSizeChange(details.delta.dy);
+//               },
+//               child: Container(
+//                 width: 24,
+//                 height: 24,
+//                 decoration: BoxDecoration(
+//                   color: color.withOpacity(0.8),
+//                   shape: BoxShape.circle,
+//                   border: Border.all(color: Colors.white, width: 2),
+//                 ),
+//                 child: const Icon(
+//                   Icons.zoom_out_map,
+//                   size: 16,
+//                   color: Colors.white,
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildDraggableLogo({Key? key}) {
+//     return Obx(() {
+//       return Positioned(
+//         left: _logoPosition.value.dx,
+//         top: _logoPosition.value.dy,
+//         child: Stack(
+//           key: key,
+//           children: [
+//             GestureDetector(
+//               onPanUpdate: (details) {
+//                 _logoPosition.value = _constrainPosition(
+//                   _logoPosition.value + details.delta,
+//                   Size(_logoSize.value, _logoSize.value),
+//                 );
+//               },
+//               child: Container(
+//                 decoration: BoxDecoration(
+//                   border: Border.all(
+//                     color: Colors.white.withOpacity(0.5),
+//                     width: 1,
+//                   ),
+//                 ),
+//                 child: widget.logoImagePath.isEmpty
+//                     ? Image.asset(
+//                         'assets/logo.png',
+//                         width: _logoSize.value,
+//                         height: _logoSize.value,
+//                         fit: BoxFit.cover,
+//                       )
+//                     : Image.file(
+//                         File(widget.logoImagePath),
+//                         width: _logoSize.value,
+//                         height: _logoSize.value,
+//                         fit: BoxFit.cover,
+//                       ),
+//               ),
+//             ),
+//             // Resize handle
+//             Positioned(
+//               right: -10,
+//               bottom: -10,
+//               child: GestureDetector(
+//                 onPanUpdate: (details) {
+//                   double newSize =
+//                       (_logoSize.value + details.delta.dy).clamp(50.0, 200.0);
+//                   _logoSize.value = newSize;
+//
+//                   // Recheck position constraints after size change
+//                   _logoPosition.value = _constrainPosition(
+//                     _logoPosition.value,
+//                     Size(newSize, newSize),
+//                   );
+//                 },
+//                 child: Container(
+//                   width: 24,
+//                   height: 24,
+//                   decoration: BoxDecoration(
+//                     color: Colors.green.withOpacity(0.8),
+//                     shape: BoxShape.circle,
+//                     border: Border.all(color: Colors.white, width: 2),
+//                   ),
+//                   child: const Icon(
+//                     Icons.zoom_out_map,
+//                     size: 16,
+//                     color: Colors.white,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       );
+//     });
+//   }
+//
+//   Size _getSize(GlobalKey key) {
+//     final RenderBox? renderBox =
+//         key.currentContext?.findRenderObject() as RenderBox?;
+//     return renderBox?.size ?? Size.zero;
+//   }
+//
+//   Offset _constrainPosition(Offset position, Size elementSize) {
+//     final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+//     if (renderBox == null) return position;
+//
+//     final Size imageSize = renderBox.size;
+//
+//     // Calculate maximum allowed positions
+//     double maxX = imageSize.width - elementSize.width;
+//     double maxY = imageSize.height - elementSize.height;
+//
+//     // Constrain the position
+//     double x = position.dx.clamp(0.0, maxX);
+//     double y = position.dy.clamp(0.0, maxY);
+//
+//     return Offset(x, y);
+//   }
+// }
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -17,48 +358,44 @@ import 'controller/switch_controller.dart';
 import 'main.dart';
 
 
-
 class EditPositionScreen extends StatefulWidget {
   final XFile imageFile;
+  final String logoImagePath;
+  final String date;
+  final String location;
   final Offset datePosition;
   final Offset locationPosition;
   final Offset logoPosition;
-  final String date;
-  final String location;
-  final String logoImagePath;
-  final Function(
-      Offset,
-      Offset,
-      Offset,
-      double,
-      double,
-      double,
-      ) onPositionUpdated;
   final double logoSize;
   final double dateFontSize;
   final double locationFontSize;
+  final Function(
+      Offset datePosition,
+      Offset locationPosition,
+      Offset logoPosition,
+      double dateFontSize,
+      double locationFontSize,
+      double logoSize,
+      ) onPositionUpdated;
 
-  EditPositionScreen({
+  const EditPositionScreen({
     Key? key,
     required this.imageFile,
+    required this.logoImagePath,
+    required this.date,
+    required this.location,
     required this.datePosition,
     required this.locationPosition,
     required this.logoPosition,
-    required this.onPositionUpdated,
-    required this.date,
-    required this.location,
-    required this.logoImagePath,
     required this.logoSize,
     required this.dateFontSize,
     required this.locationFontSize,
+    required this.onPositionUpdated,
   }) : super(key: key);
 
   @override
-  _EditPositionScreenState createState() => _EditPositionScreenState();
+  State<EditPositionScreen> createState() => _EditPositionScreenState();
 }
-
-
-
 
 class _EditPositionScreenState extends State<EditPositionScreen> {
   late Rx<Offset> _datePosition;
@@ -67,7 +404,15 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
   late RxDouble _logoSize;
   late RxDouble _dateFontSize;
   late RxDouble _locationFontSize;
-  final double containerSize = 100;
+
+  final GlobalKey _dateKey = GlobalKey();
+  final GlobalKey _locationKey = GlobalKey();
+  final GlobalKey _logoKey = GlobalKey();
+  final GlobalKey _imageContainerKey = GlobalKey();
+
+  late Size _containerSize = Size.zero;
+  late Rect _imageBounds = Rect.zero;
+  bool _isInitialized = false;
 
   final SettingsController settingsController = Get.find<SettingsController>();
 
@@ -80,6 +425,57 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
     _logoSize = RxDouble(widget.logoSize);
     _dateFontSize = RxDouble(widget.dateFontSize);
     _locationFontSize = RxDouble(widget.locationFontSize);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeBounds();
+    });
+  }
+
+  void _initializeBounds() {
+    final RenderBox? containerBox =
+    _imageContainerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (containerBox != null) {
+      _containerSize = containerBox.size;
+
+      // Get the actual image size and calculate aspect ratio
+      final imageFile = File(widget.imageFile.path);
+      Image.file(imageFile)
+          .image
+          .resolve(ImageConfiguration())
+          .addListener(ImageStreamListener((info, _) {
+        final imageWidth = info.image.width.toDouble();
+        final imageHeight = info.image.height.toDouble();
+        final imageAspectRatio = imageWidth / imageHeight;
+        final containerAspectRatio = _containerSize.width / _containerSize.height;
+
+        double imageDisplayWidth;
+        double imageDisplayHeight;
+        double offsetX = 0;
+        double offsetY = 0;
+
+        if (imageAspectRatio > containerAspectRatio) {
+          // Image is wider than container
+          imageDisplayWidth = _containerSize.width;
+          imageDisplayHeight = imageDisplayWidth / imageAspectRatio;
+          offsetY = (_containerSize.height - imageDisplayHeight) / 2;
+        } else {
+          // Image is taller than container
+          imageDisplayHeight = _containerSize.height;
+          imageDisplayWidth = imageDisplayHeight * imageAspectRatio;
+          offsetX = (_containerSize.width - imageDisplayWidth) / 2;
+        }
+
+        setState(() {
+          _imageBounds = Rect.fromLTWH(
+            offsetX,
+            offsetY,
+            imageDisplayWidth,
+            imageDisplayHeight,
+          );
+          _isInitialized = true;
+        });
+      }));
+    }
   }
 
   @override
@@ -87,11 +483,10 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
     return Scaffold(
       backgroundColor: Colors.grey,
       appBar: AppBar(
-        title: Text("Edit Position"),
+        title: const Text("Edit Position"),
         actions: [
           IconButton(
             onPressed: () {
-              // Update with positions and sizes
               widget.onPositionUpdated(
                 _datePosition.value,
                 _locationPosition.value,
@@ -102,72 +497,92 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
               );
               Navigator.pop(context);
             },
-            icon: Icon(Icons.check),
+            icon: const Icon(Icons.check),
           ),
         ],
       ),
-      body: Center(
+      body: Container(
+        key: _imageContainerKey,
         child: Stack(
+          fit: StackFit.expand,
           children: [
             // Background Image
-            Positioned.fill(
-              child: Image.file(
-                File(widget.imageFile.path),
-                fit: BoxFit.contain,
-              ),
+            Image.file(
+              File(widget.imageFile.path),
+              fit: BoxFit.contain,
             ),
-            // Conditionally render the date if it's visible
-            Obx(() {
-              return settingsController.showDateTime.value
-                  ? _buildDraggableTextContainer(
-                position: _datePosition.value,
-                text: widget.date,
-                fontSize: _dateFontSize.value,
-                onPositionChange: (newPosition) {
-                  _datePosition.value = _constrainTextPosition(newPosition);
-                },
-                onFontSizeChange: (delta) {
-                  _dateFontSize.value = (_dateFontSize.value + delta).clamp(12.0, 30.0);
-                },
-                color: settingsController.dateTextColor.value,
-                bgcolor: settingsController.dBackgroundColor.value,
-              )
-                  : Container(); // Show an empty container when the date is hidden
-            }),
-            // Conditionally render the location if it's visible
-            Obx(() {
-              return settingsController.showLocation.value
-                  ? _buildDraggableTextContainer(
-                position: _locationPosition.value,
-                text: widget.location,
-                fontSize: _locationFontSize.value,
-                onPositionChange: (newPosition) {
-                  _locationPosition.value = _constrainTextPosition(newPosition);
-                },
-                onFontSizeChange: (delta) {
-                  _locationFontSize.value = (_locationFontSize.value + delta).clamp(12.0, 30.0);
-                },
-                color: settingsController.locationTextColor.value,
-                bgcolor: settingsController.lBackgroundColor.value,
-              )
-                  : Container(); // Show an empty container when the location is hidden
-            }),
-            // Conditionally render the logo if it's visible
-            Obx(() {
-              return settingsController.showLogo.value
-                  ? _buildDraggableLogo()
-                  : Container(); // Show an empty container when the logo is hidden
-            }),
+            if (_isInitialized) ...[
+              // Date
+              Obx(() {
+                return settingsController.showDateTime.value
+                    ? _buildDraggableTextContainer(
+                  key: _dateKey,
+                  position: _datePosition.value,
+                  text: widget.date,
+                  fontSize: _dateFontSize.value,
+                  onPositionChange: (newPosition) {
+                    _datePosition.value = _constrainPosition(
+                      newPosition,
+                      _getSize(_dateKey),
+                    );
+                  },
+                  onFontSizeChange: (delta) {
+                    _dateFontSize.value =
+                        (_dateFontSize.value + delta).clamp(5.0, 20.0);
+                    // Recheck position after size change
+                    _datePosition.value = _constrainPosition(
+                      _datePosition.value,
+                      _getSize(_dateKey),
+                    );
+                  },
+                  color: settingsController.dateTextColor.value,
+                  bgcolor: settingsController.dBackgroundColor.value,
+                )
+                    : Container();
+              }),
+              // Location
+              Obx(() {
+                return settingsController.showLocation.value
+                    ? _buildDraggableTextContainer(
+                  key: _locationKey,
+                  position: _locationPosition.value,
+                  text: widget.location,
+                  fontSize: _locationFontSize.value,
+                  onPositionChange: (newPosition) {
+                    _locationPosition.value = _constrainPosition(
+                      newPosition,
+                      _getSize(_locationKey),
+                    );
+                  },
+                  onFontSizeChange: (delta) {
+                    _locationFontSize.value =
+                        (_locationFontSize.value + delta).clamp(5.0, 20.0);
+                    // Recheck position after size change
+                    _locationPosition.value = _constrainPosition(
+                      _locationPosition.value,
+                      _getSize(_locationKey),
+                    );
+                  },
+                  color: settingsController.locationTextColor.value,
+                  bgcolor: settingsController.lBackgroundColor.value,
+                )
+                    : Container();
+              }),
+              // Logo
+              Obx(() {
+                return settingsController.showLogo.value
+                    ? _buildDraggableLogo()
+                    : Container();
+              }),
+            ],
           ],
         ),
       ),
     );
   }
 
-
-
-
   Widget _buildDraggableTextContainer({
+    Key? key,
     required Offset position,
     required String text,
     required double fontSize,
@@ -180,41 +595,48 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
       left: position.dx,
       top: position.dy,
       child: Stack(
+        key: key,
         children: [
           GestureDetector(
-            // Allows dragging the text container
             onPanUpdate: (details) {
-              // Directly update the position without constraints to match the logo's movement speed
               onPositionChange(position + details.delta);
             },
             child: Container(
               padding: const EdgeInsets.all(8.0),
-              color: bgcolor.withOpacity(0.3),
+              decoration: BoxDecoration(
+                color: bgcolor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(4.0),
+              ),
               child: Text(
                 text,
                 style: TextStyle(
                   color: color,
                   fontSize: fontSize,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
           ),
-          // Pinch Button for resizing the text font size
           Positioned(
-            right: 0,
-            bottom: 0,
+            right: -10,
+            bottom: -10,
             child: GestureDetector(
               onPanUpdate: (details) {
                 onFontSizeChange(details.delta.dy);
               },
               child: Container(
-                width: 20,
-                height: 20,
+                width: 24,
+                height: 24,
                 decoration: BoxDecoration(
-                  color: color,
+                  color: color.withOpacity(0.8),
                   shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
-                child: Icon(Icons.zoom_out_map, size: 15, color: Colors.white),
+                child: const Icon(
+                  Icons.zoom_out_map,
+                  size: 16,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -223,147 +645,167 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
     );
   }
 
-  //
-  // Widget _buildDraggableTextContainer({
-  //   required Offset position,
-  //   required String text,
-  //   required double fontSize,
-  //   required ValueChanged<Offset> onPositionChange,
-  //   required ValueChanged<double> onFontSizeChange,
-  //   required Color color,
-  //   required Color bgcolor,
-  // }) {
-  //   return Positioned(
-  //     left: position.dx,
-  //     top: position.dy,
-  //     child: Stack(
-  //       children: [
-  //         GestureDetector(
-  //           onPanUpdate: (details) {
-  //             onPositionChange(position + details.delta);
-  //           },
-  //           child: Container(
-  //             padding: const EdgeInsets.all(8.0),
-  //             color: bgcolor.withOpacity(0.3),
-  //             child: Text(
-  //               text,
-  //               style: TextStyle(
-  //                 color: color,
-  //                 fontSize: fontSize,
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //         Positioned(
-  //           right: 0,
-  //           bottom: 0,
-  //           child: GestureDetector(
-  //             onPanUpdate: (details) {
-  //               onFontSizeChange(details.delta.dy);
-  //             },
-  //             child: Container(
-  //               width: 20,
-  //               height: 20,
-  //               decoration: BoxDecoration(
-  //                 color: color,
-  //                 shape: BoxShape.circle,
-  //               ),
-  //               child: Icon(Icons.zoom_out_map, size: 15, color: Colors.white),
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   Widget _buildDraggableLogo() {
-    return Obx(() {
-      return Positioned(
-        left: _logoPosition.value.dx,
-        top: _logoPosition.value.dy,
-        child: Stack(
-          children: [
-            GestureDetector(
-              onPanUpdate: (details) {
-                _logoPosition.value = _constrainLogoPosition(_logoPosition.value + details.delta);
-              },
-              child:widget.logoImagePath.isEmpty? Image.asset(
+    return Positioned(
+      left: _logoPosition.value.dx,
+      top: _logoPosition.value.dy,
+      child: Stack(
+        key: _logoKey,
+        children: [
+          GestureDetector(
+            onPanUpdate: (details) {
+              _logoPosition.value = _constrainPosition(
+                _logoPosition.value + details.delta,
+                Size(_logoSize.value, _logoSize.value),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+              child: widget.logoImagePath.isEmpty
+                  ? Image.asset(
                 'assets/logo.png',
                 width: _logoSize.value,
                 height: _logoSize.value,
                 fit: BoxFit.cover,
-              ):Image.file(File(
-                  widget.logoImagePath),
+              )
+                  : Image.file(
+                File(widget.logoImagePath),
                 width: _logoSize.value,
                 height: _logoSize.value,
                 fit: BoxFit.cover,
               ),
             ),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: GestureDetector(
-                onPanUpdate: (details) {
-                  _logoSize.value = (_logoSize.value + details.delta.dy).clamp(50.0, 200.0);
-                },
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.zoom_out_map, size: 15, color: Colors.white),
+          ),
+          Positioned(
+            right: -10,
+            bottom: -10,
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                double newSize = (_logoSize.value + details.delta.dy)
+                    .clamp(50.0, 200.0);
+                _logoSize.value = newSize;
+
+                // Recheck position after size change
+                _logoPosition.value = _constrainPosition(
+                  _logoPosition.value,
+                  Size(newSize, newSize),
+                );
+              },
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.8),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Icon(
+                  Icons.zoom_out_map,
+                  size: 16,
+                  color: Colors.white,
                 ),
               ),
             ),
-          ],
-        ),
-      );
-    });
+          ),
+        ],
+      ),
+    );
   }
 
-  Offset _constrainTextPosition(Offset position) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-    double x = position.dx.clamp(0.0, screenWidth - containerSize);
-    double y = position.dy.clamp(0.0, screenHeight - containerSize);
-    return Offset(x, y);
+  Size _getSize(GlobalKey key) {
+    final RenderBox? renderBox = key.currentContext?.findRenderObject() as RenderBox?;
+    return renderBox?.size ?? Size.zero;
   }
 
-  Offset _constrainLogoPosition(Offset position) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-    double x = position.dx.clamp(0.0, screenWidth - _logoSize.value);
-    double y = position.dy.clamp(0.0, screenHeight - _logoSize.value);
+  Offset _constrainPosition(Offset position, Size elementSize) {
+    if (!_isInitialized) return position;
+
+    // Calculate the maximum allowed positions within the image bounds
+    double maxX = _imageBounds.right - elementSize.width;
+    double maxY = _imageBounds.bottom - elementSize.height;
+
+    // Constrain the position to stay within the image bounds
+    double x = position.dx.clamp(_imageBounds.left, maxX);
+    double y = position.dy.clamp(_imageBounds.top, maxY);
+
     return Offset(x, y);
   }
 }
 
 
-// class _EditPositionScreenState extends State<EditPositionScreen> {
-//   late Offset _datePosition;
-//   late Offset _locationPosition;
-//   late Offset _logoPosition;
-//   late double _logoSize;
-//   late double _dateFontSize;
-//   late double _locationFontSize;
-//   final double containerSize =
-//   100; // Default container size for date and location
+
+
+
+
+// class EditPositionScreen extends StatefulWidget {
+//   final XFile imageFile;
+//   final String logoImagePath;
+//   final String date;
+//   final String location;
+//   final Offset datePosition;
+//   final Offset locationPosition;
+//   final Offset logoPosition;
+//   final double logoSize;
+//   final double dateFontSize;
+//   final double locationFontSize;
+//   final Function(
+//       Offset datePosition,
+//       Offset locationPosition,
+//       Offset logoPosition,
+//       double dateFontSize,
+//       double locationFontSize,
+//       double logoSize,
+//       ) onPositionUpdated;
 //
-//   final SettingsController settingsController =
-//   Get.find<SettingsController>(); // Get the SettingsController
+//   const EditPositionScreen({
+//     Key? key,
+//     required this.imageFile,
+//     required this.logoImagePath,
+//     required this.date,
+//     required this.location,
+//     required this.datePosition,
+//     required this.locationPosition,
+//     required this.logoPosition,
+//     required this.logoSize,
+//     required this.dateFontSize,
+//     required this.locationFontSize,
+//     required this.onPositionUpdated,
+//   }) : super(key: key);
+//
+//   @override
+//   State<EditPositionScreen> createState() => _EditPositionScreenState();
+// }
+
+// class _EditPositionScreenState extends State<EditPositionScreen> {
+//   // Declare Rx variables for positions and sizes
+//   late Rx<Offset> _datePosition;
+//   late Rx<Offset> _locationPosition;
+//   late Rx<Offset> _logoPosition;
+//   late RxDouble _logoSize;
+//   late RxDouble _dateFontSize;
+//   late RxDouble _locationFontSize;
+//
+//   // Keys for size measurement
+//   final GlobalKey _dateKey = GlobalKey();
+//   final GlobalKey _locationKey = GlobalKey();
+//   final GlobalKey _logoKey = GlobalKey();
+//
+//   final SettingsController settingsController = Get.find<SettingsController>();
 //
 //   @override
 //   void initState() {
 //     super.initState();
-//     _datePosition = widget.datePosition;
-//     _locationPosition = widget.locationPosition;
-//     _logoPosition = widget.logoPosition;
-//     _logoSize = widget.logoSize;
-//     _dateFontSize = widget.dateFontSize;
-//     _locationFontSize = widget.locationFontSize;
+//     _datePosition = Rx<Offset>(widget.datePosition);
+//     _locationPosition = Rx<Offset>(widget.locationPosition);
+//     _logoPosition = Rx<Offset>(widget.logoPosition);
+//     _logoSize = RxDouble(widget.logoSize);
+//     _dateFontSize = RxDouble(widget.dateFontSize);
+//     _locationFontSize = RxDouble(widget.locationFontSize);
 //   }
 //
 //   @override
@@ -371,92 +813,97 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
 //     return Scaffold(
 //       backgroundColor: Colors.grey,
 //       appBar: AppBar(
-//         title: Text("Edit Position"),
+//         title: const Text("Edit Position"),
 //         actions: [
 //           IconButton(
 //             onPressed: () {
 //               // Update with positions and sizes
 //               widget.onPositionUpdated(
-//                 _datePosition,
-//                 _locationPosition,
-//                 _logoPosition,
-//                 _dateFontSize, // Pass updated date font size
-//                 _locationFontSize, // Pass updated location font size
-//                 _logoSize, // Pass updated logo size
+//                 _datePosition.value,
+//                 _locationPosition.value,
+//                 _logoPosition.value,
+//                 _dateFontSize.value,
+//                 _locationFontSize.value,
+//                 _logoSize.value,
 //               );
 //               Navigator.pop(context);
 //             },
-//             icon: Icon(Icons.check),
+//             icon: const Icon(Icons.check),
 //           ),
 //         ],
 //       ),
-//       body: Center(
-//         child: Stack(
-//           children: [
-//             // Background Image
-//             Positioned.fill(
-//               child: Image.file(
-//                 File(widget.imageFile.path),
-//                 fit: BoxFit.contain,
-//               ),
+//       body: Stack(
+//         children: [
+//           // Background Image
+//           Positioned.fill(
+//             bottom: 0,
+//             left: 0,
+//             right: 0,
+//             top: 0,
+//             child: Image.file(
+//               File(widget.imageFile.path),
+//               fit: BoxFit.contain,
 //             ),
-//             // Conditionally render the date if it's visible
-//             Obx(() {
-//               return settingsController.showDateTime.value
-//                   ? _buildDraggableTextContainer(
-//                 position: _datePosition,
-//                 text: widget.date,
-//                 fontSize: _dateFontSize,
-//                 onPositionChange: (newPosition) {
-//                   setState(() {
-//                     _datePosition = newPosition;
-//                   });
-//                 },
-//                 onFontSizeChange: (delta) {
-//                   setState(() {
-//                     _dateFontSize =
-//                         (_dateFontSize + delta).clamp(12.0, 30.0);
-//                   });
-//                 },
-//                 color: settingsController.dateTextColor.value, bgcolor: settingsController.dBackgroundColor.value,
-//               )
-//                   : Container(); // Show an empty container when the date is hidden
-//             }),
-//             // Conditionally render the location if it's visible
-//             Obx(() {
-//               return settingsController.showLocation.value
-//                   ? _buildDraggableTextContainer(
-//                 position: _locationPosition,
-//                 text: widget.location,
-//                 fontSize: _locationFontSize,
-//                 onPositionChange: (newPosition) {
-//                   setState(() {
-//                     _locationPosition = newPosition;
-//                   });
-//                 },
-//                 onFontSizeChange: (delta) {
-//                   setState(() {
-//                     _locationFontSize =
-//                         (_locationFontSize + delta).clamp(12.0, 30.0);
-//                   });
-//                 },
-//                 color: settingsController.locationTextColor.value, bgcolor: settingsController.lBackgroundColor.value,
-//               )
-//                   : Container(); // Show an empty container when the location is hidden
-//             }),
-//             // Conditionally render the logo if it's visible
-//             Obx(() {
-//               return settingsController.showLogo.value
-//                   ? _buildDraggableLogo()
-//                   : Container(); // Show an empty container when the logo is hidden
-//             }),
-//           ],
-//         ),
+//           ),
+//           // Date
+//           Obx(() {
+//             return settingsController.showDateTime.value
+//                 ? _buildDraggableTextContainer(
+//               key: _dateKey,
+//               position: _datePosition.value,
+//               text: widget.date,
+//               fontSize: _dateFontSize.value,
+//               onPositionChange: (newPosition) {
+//                 _datePosition.value = _constrainPosition(
+//                   newPosition,
+//                   _getSize(_dateKey),
+//                 );
+//               },
+//               onFontSizeChange: (delta) {
+//                 _dateFontSize.value =
+//                     (_dateFontSize.value + delta).clamp(10.0, 30.0);
+//               },
+//               color: settingsController.dateTextColor.value,
+//               bgcolor: settingsController.dBackgroundColor.value,
+//             )
+//                 : Container();
+//           }),
+//           // Location
+//           Obx(() {
+//             return settingsController.showLocation.value
+//                 ? _buildDraggableTextContainer(
+//               key: _locationKey,
+//               position: _locationPosition.value,
+//               text: widget.location,
+//               fontSize: _locationFontSize.value,
+//               onPositionChange: (newPosition) {
+//                 _locationPosition.value = _constrainPosition(
+//                   newPosition,
+//                   _getSize(_locationKey),
+//                 );
+//               },
+//               onFontSizeChange: (delta) {
+//                 _locationFontSize.value =
+//                     (_locationFontSize.value + delta).clamp(12.0, 30.0);
+//               },
+//               color: settingsController.locationTextColor.value,
+//               bgcolor: settingsController.lBackgroundColor.value,
+//             )
+//                 : Container();
+//           }),
+//           // Logo
+//           Obx(() {
+//             return settingsController.showLogo.value
+//                 ? _buildDraggableLogo(key: _logoKey)
+//                 : Container();
+//           }),
+//         ],
 //       ),
 //     );
 //   }
 //
 //   Widget _buildDraggableTextContainer({
+//     Key? key,
 //     required Offset position,
 //     required String text,
 //     required double fontSize,
@@ -469,42 +916,49 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
 //       left: position.dx,
 //       top: position.dy,
 //       child: Stack(
+//         key: key,
 //         children: [
 //           GestureDetector(
-//             // Allows dragging the text container
 //             onPanUpdate: (details) {
-//               onPositionChange(
-//                   _constrainTextPosition(position + details.delta));
+//               onPositionChange(position + details.delta);
 //             },
 //             child: Container(
 //               padding: const EdgeInsets.all(8.0),
-//               color: bgcolor.withOpacity(0.3),
-//               // Optional background color for text container
+//               decoration: BoxDecoration(
+//                 color: bgcolor.withOpacity(0.3),
+//                 borderRadius: BorderRadius.circular(4.0),
+//               ),
 //               child: Text(
 //                 text,
 //                 style: TextStyle(
 //                   color: color,
 //                   fontSize: fontSize,
+//                   fontWeight: FontWeight.w500,
 //                 ),
 //               ),
 //             ),
 //           ),
-//           // Pinch Button for resizing the text font size
+//           // Resize handle
 //           Positioned(
-//             right: 0,
-//             bottom: 0,
+//             right: -10,
+//             bottom: -10,
 //             child: GestureDetector(
 //               onPanUpdate: (details) {
 //                 onFontSizeChange(details.delta.dy);
 //               },
 //               child: Container(
-//                 width: 20,
-//                 height: 20,
+//                 width: 24,
+//                 height: 24,
 //                 decoration: BoxDecoration(
-//                   color: color,
+//                   color: color.withOpacity(0.8),
 //                   shape: BoxShape.circle,
+//                   border: Border.all(color: Colors.white, width: 2),
 //                 ),
-//                 child: Icon(Icons.zoom_out_map, size: 15, color: Colors.white),
+//                 child: const Icon(
+//                   Icons.zoom_out_map,
+//                   size: 16,
+//                   color: Colors.white,
+//                 ),
 //               ),
 //             ),
 //           ),
@@ -513,80 +967,105 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
 //     );
 //   }
 //
-//   Offset _constrainTextPosition(Offset position) {
-//     double screenWidth = MediaQuery.of(context).size.width;
-//     double screenHeight = MediaQuery.of(context).size.height;
-//
-//     // Constrain to the boundaries of the screen
-//     double x = position.dx.clamp(0.0, screenWidth - containerSize);
-//     double y = position.dy.clamp(0.0, screenHeight - containerSize);
-//
-//     return Offset(x, y);
-//   }
-//
-//   Widget _buildDraggableLogo() {
-//     return Positioned(
-//       left: _logoPosition.dx,
-//       top: _logoPosition.dy,
-//       child: Stack(
-//         children: [
-//           GestureDetector(
-//             // Allows for dragging anywhere within the logo bounds
-//             onPanUpdate: (details) {
-//               setState(() {
-//                 _logoPosition =
-//                     _constrainLogoPosition(_logoPosition + details.delta);
-//               });
-//             },
-//             child: Image.asset(
-//               widget.logoImagePath,
-//               width: _logoSize,
-//               height: _logoSize,
-//               fit: BoxFit.cover,
-//             ),
-//           ),
-//           // Pinch Button for Logo Resizing
-//           Positioned(
-//             right: 0,
-//             bottom: 0,
-//             child: GestureDetector(
+//   Widget _buildDraggableLogo({Key? key}) {
+//     return Obx(() {
+//       return Positioned(
+//         left: _logoPosition.value.dx,
+//         top: _logoPosition.value.dy,
+//         child: Stack(
+//           key: key,
+//           children: [
+//             GestureDetector(
 //               onPanUpdate: (details) {
-//                 setState(() {
-//                   _logoSize = (_logoSize + details.delta.dy).clamp(50.0, 200.0);
-//                 });
+//                 _logoPosition.value = _constrainPosition(
+//                   _logoPosition.value + details.delta,
+//                   Size(_logoSize.value, _logoSize.value),
+//                 );
 //               },
 //               child: Container(
-//                 width: 20,
-//                 height: 20,
 //                 decoration: BoxDecoration(
-//                   color: Colors.green,
-//                   shape: BoxShape.circle,
+//                   border: Border.all(
+//                     color: Colors.white.withOpacity(0.5),
+//                     width: 1,
+//                   ),
 //                 ),
-//                 child: Icon(Icons.zoom_out_map, size: 15, color: Colors.white),
+//                 child: widget.logoImagePath.isEmpty
+//                     ? Image.asset(
+//                   'assets/logo.png',
+//                   width: _logoSize.value,
+//                   height: _logoSize.value,
+//                   fit: BoxFit.cover,
+//                 )
+//                     : Image.file(
+//                   File(widget.logoImagePath),
+//                   width: _logoSize.value,
+//                   height: _logoSize.value,
+//                   fit: BoxFit.cover,
+//                 ),
 //               ),
 //             ),
-//           ),
-//         ],
-//       ),
-//     );
+//             // Resize handle
+//             Positioned(
+//               right: -10,
+//               bottom: -10,
+//               child: GestureDetector(
+//                 onPanUpdate: (details) {
+//                   double newSize =
+//                   (_logoSize.value + details.delta.dy).clamp(50.0, 200.0);
+//                   _logoSize.value = newSize;
+//
+//                   // Recheck position constraints after size change
+//                   _logoPosition.value = _constrainPosition(
+//                     _logoPosition.value,
+//                     Size(newSize, newSize),
+//                   );
+//                 },
+//                 child: Container(
+//                   width: 24,
+//                   height: 24,
+//                   decoration: BoxDecoration(
+//                     color: Colors.green.withOpacity(0.8),
+//                     shape: BoxShape.circle,
+//                     border: Border.all(color: Colors.white, width: 2),
+//                   ),
+//                   child: const Icon(
+//                     Icons.zoom_out_map,
+//                     size: 16,
+//                     color: Colors.white,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       );
+//     });
 //   }
 //
-//   Offset _constrainLogoPosition(Offset position) {
-//     double screenWidth = MediaQuery.of(context).size.width;
-//     double screenHeight = MediaQuery.of(context).size.height;
-//
-//     // Constrain to the boundaries of the screen/image to prevent overflow
-//     double x = position.dx.clamp(0.0, screenWidth - _logoSize);
-//     double y = position.dy.clamp(0.0, screenHeight - _logoSize);
-//
-//     return Offset(x, y);
+//   Size _getSize(GlobalKey key) {
+//     final RenderBox? renderBox =
+//     key.currentContext?.findRenderObject() as RenderBox?;
+//     return renderBox?.size ?? Size.zero;
 //   }
 //
-//   Offset _constrainPosition(Offset position) {
-//     double screenWidth = MediaQuery.of(context).size.width;
-//     double screenHeight = MediaQuery.of(context).size.height;
-//     double x = position.dx.clamp(0.0, screenWidth - containerSize);
-//     double y = position.dy.clamp(0.0, screenHeight - containerSize);
+//   Offset _constrainPosition(Offset position, Size elementSize) {
+//     final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+//     if (renderBox == null) return position;
+//
+//     final Size imageSize = renderBox.size;
+//
+//     // Calculate maximum allowed positions
+//     double maxX = imageSize.width - elementSize.width;
+//     double maxY = imageSize.height - elementSize.height;
+//
+//     // Constrain the position
+//     double x = position.dx.clamp(0.0, maxX);
+//     double y = position.dy.clamp(0.0, maxY);
+//
 //     return Offset(x, y);
 //   }
 // }
+// import 'dart:io';
+// import 'package:flutter/material.dart';
+// import 'package:get/get.dart';
+// import 'package:image_picker/image_picker.dart';
