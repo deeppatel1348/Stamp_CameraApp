@@ -12,6 +12,7 @@ class SettingsController extends GetxController {
   var showDB = true.obs;
   var showLB = true.obs;
 
+  late Size containerSize = Size.zero;
   // Color properties
   var dateTextColor = Colors.white.obs;
   var locationTextColor = Colors.white.obs;
@@ -25,7 +26,7 @@ class SettingsController extends GetxController {
 
   // Positions and sizes
    var datePosition = Offset(100, 100).obs;
-  var locationPosition = Offset(100, 200).obs;
+  var locationPosition = Offset(100, 300).obs;
   var logoPosition = Offset(100, 300).obs;
   var logoSize = 60.0.obs;
   var dateFontSize = 20.0.obs;
@@ -86,41 +87,7 @@ class SettingsController extends GetxController {
 
   }
 
-  // Load preferences from storage
-  // Future<void> _loadPreferences() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //
-  //   showLogo.value = prefs.getBool('showLogo') ?? true;
-  //   showLocation.value = prefs.getBool('showLocation') ?? true;
-  //   showDateTime.value = prefs.getBool('showDateTime') ?? true;
-  //   showDB.value = prefs.getBool('showDB') ?? true;
-  //   showLB.value = prefs.getBool('showLB') ?? true;
-  //
-  //   dateTextColor.value = Color(prefs.getInt('dateTextColor') ?? Colors.white.value);
-  //   locationTextColor.value = Color(prefs.getInt('locationTextColor') ?? Colors.white.value);
-  //   dBackgroundColor.value = Color(prefs.getInt('dBackgroundColor') ?? Colors.white.value);
-  //   lBackgroundColor.value = Color(prefs.getInt('lBackgroundColor') ?? Colors.white.value);
-  //
-  //   // Load position and size values
-  //   datePosition.value = Offset(
-  //     prefs.getDouble('datePositionX') ?? 100,
-  //     prefs.getDouble('datePositionY') ?? 100,
-  //   );
-  //   locationPosition.value = Offset(
-  //     prefs.getDouble('locationPositionX') ?? 100,
-  //     prefs.getDouble('locationPositionY') ?? 200,
-  //   );
-  //   logoPosition.value = Offset(
-  //     prefs.getDouble('logoPositionX') ?? 100,
-  //     prefs.getDouble('logoPositionY') ?? 300,
-  //   );
-  //   logoSize.value = prefs.getDouble('logoSize') ?? 60.0;
-  //   dateFontSize.value = prefs.getDouble('dateFontSize') ?? 20.0;
-  //   locationFontSize.value = prefs.getDouble('locationFontSize') ?? 20.0;
-  // }
-
-  // Save preferences to storage
-  Future<void> _savePreference(String key, dynamic value) async {
+   Future<void> savePreference(String key, dynamic value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (value is bool) {
       await prefs.setBool(key, value);
@@ -136,20 +103,20 @@ class SettingsController extends GetxController {
   // Methods to save positions
   void saveDatePosition(Offset position) {
     datePosition.value = position;
-    _savePreference('datePositionX', position.dx);
-    _savePreference('datePositionY', position.dy);
+    savePreference('datePositionX', position.dx);
+    savePreference('datePositionY', position.dy);
   }
 
   void saveLocationPosition(Offset position) {
     locationPosition.value = position;
-    _savePreference('locationPositionX', position.dx);
-    _savePreference('locationPositionY', position.dy);
+    savePreference('locationPositionX', position.dx);
+    savePreference('locationPositionY', position.dy);
   }
 
   void saveLogoPosition(Offset position) {
     logoPosition.value = position;
-    _savePreference('logoPositionX', position.dx);
-    _savePreference('logoPositionY', position.dy);
+    savePreference('logoPositionX', position.dx);
+    savePreference('logoPositionY', position.dy);
   }
 
   // Method to pick an image from the gallery
@@ -160,7 +127,7 @@ class SettingsController extends GetxController {
     if (image != null) {
       isLoading.value = true; // Set loading to true
       logoImagePath.value = image.path;
-      await _savePreference('logoImagePath', image.path); // Save the path
+      await savePreference('logoImagePath', image.path); // Save the path
       isLoading.value = false; // Set loading to false after loading
 
     }update();
@@ -174,57 +141,57 @@ class SettingsController extends GetxController {
   // Toggle visibility methods
   void toggleLogoVisibility(bool value) {
     showLogo.value = value;
-    _savePreference('showLogo', value);
+    savePreference('showLogo', value);
     update();
   }
 
   void toggleLocationVisibility(bool value) {
     showLocation.value = value;
-    _savePreference('showLocation', value);
+    savePreference('showLocation', value);
     update();
   }
 
   void toggleDateTimeVisibility(bool value) {
     showDateTime.value = value;
-    _savePreference('showDateTime', value);
+    savePreference('showDateTime', value);
     update();
   }
 
   void toggleDatebVisibility(bool value) {
     showDB.value = value;
-    _savePreference('showDB', value);
+    savePreference('showDB', value);
     update();
   }
 
   void toggleLocbVisibility(bool value) {
     showLB.value = value;
-    _savePreference('showLB', value);
+    savePreference('showLB', value);
     update();
   }
 
   // Update text colors
   void updateDateTextColor(Color color) {
     dateTextColor.value = color;
-    _savePreference('dateTextColor', color.value);
+    savePreference('dateTextColor', color.value);
     update();
   }
 
   void updateLocationTextColor(Color color) {
     locationTextColor.value = color;
-    _savePreference('locationTextColor', color.value);
+    savePreference('locationTextColor', color.value);
     update();
   }
 
   // Update background colors
   void updatedBackgroundColor(Color color) {
     dBackgroundColor.value = color;
-    _savePreference('dBackgroundColor', color.value);
+    savePreference('dBackgroundColor', color.value);
     update();
   }
 
   void updatelBackgroundColor(Color color) {
     lBackgroundColor.value = color;
-    _savePreference('lBackgroundColor', color.value);
+    savePreference('lBackgroundColor', color.value);
     update();
   }
 
@@ -237,3 +204,5 @@ class SettingsController extends GetxController {
     update();
   }
 }
+
+

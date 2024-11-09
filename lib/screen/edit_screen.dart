@@ -13,7 +13,7 @@
 // import 'package:path_provider/path_provider.dart';
 // import 'package:permission_handler/permission_handler.dart';
 //
-// import 'controller/switch_controller.dart';
+// import 'controller/setting_controller.dart';
 // import 'main.dart';
 //
 // class EditPositionScreen extends StatefulWidget {
@@ -343,18 +343,21 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:dcamera_application/services/ad_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
-import 'controller/switch_controller.dart';
+import 'controller/setting_controller.dart';
 import 'main.dart';
 
 
@@ -419,6 +422,8 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
   @override
   void initState() {
     super.initState();
+    AdProvider adProvider = Provider.of<AdProvider>(context, listen: false);
+    adProvider.initializeHomePageBanner();
     _datePosition = Rx<Offset>(widget.datePosition);
     _locationPosition = Rx<Offset>(widget.locationPosition);
     _logoPosition = Rx<Offset>(widget.logoPosition);
@@ -578,6 +583,20 @@ class _EditPositionScreenState extends State<EditPositionScreen> {
           ],
         ),
       ),
+      bottomNavigationBar:  Consumer<AdProvider>(builder: (context, adProvider ,child){
+        if(adProvider.isHomePageBannerLoaded){
+          return Container(
+            height: 50,
+            width: double.infinity,
+            child: AdWidget(ad: adProvider.homePageBanner),
+          );
+        }
+        else{
+          return Container( height: 10,
+            width: 100,
+            child: AdWidget(ad: adProvider.homePageBanner),);
+        }
+      } ),
     );
   }
 

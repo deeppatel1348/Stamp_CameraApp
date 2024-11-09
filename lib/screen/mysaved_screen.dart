@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:share_plus/share_plus.dart';
 import 'package:dcamera_application/preview_image.dart';
 import 'package:flutter/material.dart';
 
@@ -38,7 +38,7 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
 
           return GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Display 2 images per row
+              crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
@@ -46,7 +46,6 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
             itemBuilder: (context, index) {
               return GestureDetector(
                 onTap: () {
-                  // When the image is tapped, open the full screen viewer
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -70,7 +69,6 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
   }
 }
 
-
 class FullScreenImageViewer extends StatefulWidget {
   final List<File> images;
   final int initialIndex;
@@ -90,13 +88,13 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
   @override
   void initState() {
     super.initState();
-    currentIndex = widget.initialIndex; // Set the initial image index
+    currentIndex = widget.initialIndex;
   }
 
   void _showPreviousImage() {
     setState(() {
       if (currentIndex > 0) {
-        currentIndex--; // Navigate to the previous image
+        currentIndex--;
       }
     });
   }
@@ -104,9 +102,23 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
   void _showNextImage() {
     setState(() {
       if (currentIndex < widget.images.length - 1) {
-        currentIndex++; // Navigate to the next image
+        currentIndex++;
       }
     });
+  }
+
+  Future<void> _shareImage() async {
+    try {
+      final file = widget.images[currentIndex];
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Check out this image!',
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to share image: $e')),
+      );
+    }
   }
 
   @override
@@ -116,19 +128,23 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text('Image ${currentIndex + 1}/${widget.images.length}'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.share, color: Colors.white),
+            onPressed: _shareImage,
+          ),
+        ],
       ),
       body: Stack(
         alignment: Alignment.center,
         children: [
-          // Display the image
           Center(
             child: Image.file(
               widget.images[currentIndex],
               fit: BoxFit.contain,
             ),
           ),
-          // Previous button
-          if (currentIndex > 0) // Only show if not the first image
+          if (currentIndex > 0)
             Positioned(
               left: 20,
               child: IconButton(
@@ -136,8 +152,7 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
                 onPressed: _showPreviousImage,
               ),
             ),
-          // Next button
-          if (currentIndex < widget.images.length - 1) // Only show if not the last image
+          if (currentIndex < widget.images.length - 1)
             Positioned(
               right: 20,
               child: IconButton(
