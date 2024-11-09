@@ -1,6 +1,7 @@
 import 'dart:io';
+import 'package:dcamera_application/services/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:dcamera_application/preview_image.dart';
+import 'package:dcamera_application/screen/preview_screen.dart';
 import 'package:flutter/material.dart';
 
 class ImageGalleryScreen extends StatefulWidget {

@@ -1,4 +1,4 @@
-package com.example.dcamera_application
+package com.zion.photostamp
 
 import io.flutter.embedding.android.FlutterActivity
 

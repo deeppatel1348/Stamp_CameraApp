@@ -1,8 +1,9 @@
 import 'dart:developer';
 
-import 'package:cryptotracker/services/AdHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+
+import 'AdHelper.dart';
 
 class AdProvider with ChangeNotifier {
 
@@ -37,31 +38,6 @@ class AdProvider with ChangeNotifier {
     );
 
     await homePageBanner.load();
-    notifyListeners();
-  }
-
-  void initializeDetailsPageBanner() async {
-    detailsPageBanner = BannerAd(
-      adUnitId: AdHelper.detailsPageBanner(),
-      size: AdSize.banner,
-      request: AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          log("Details Banner Loaded!");
-          isDetailsPageBannerLoaded = true;
-        },
-        onAdClosed: (ad) {
-          ad.dispose();
-          isDetailsPageBannerLoaded = false;
-        },
-        onAdFailedToLoad: (ad, err) {
-          log(err.toString());
-          isDetailsPageBannerLoaded = false;
-        }
-      ),
-    );
-
-    await detailsPageBanner.load();
     notifyListeners();
   }
 

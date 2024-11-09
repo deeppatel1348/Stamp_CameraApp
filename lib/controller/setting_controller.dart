@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../setting_page.dart';
+import '../screen/setting_page.dart';
 
 class SettingsController extends GetxController {
   var showLogo = true.obs;

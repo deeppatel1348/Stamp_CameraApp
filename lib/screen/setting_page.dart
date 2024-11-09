@@ -1,13 +1,11 @@
-
-
-import 'package:dcamera_application/default_position.dart';
+import 'package:dcamera_application/screen/default_position_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'controller/setting_controller.dart';
+import '../controller/setting_controller.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'dart:io';
-import 'mysaved.dart';
+import 'mysaved_screen.dart';
 
 class SettingPage extends StatefulWidget {
   @override
@@ -29,9 +27,22 @@ class _SettingPageState extends State<SettingPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: InkWell(
+            onTap: () {
+              Get.back();
+            },
+            child: Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+            )),
+        automaticallyImplyLeading: false,
         title: Text(
           'Settings',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'Montserrat'),
+          style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Montserrat',
+              color: Colors.white),
         ),
         backgroundColor: Colors.blueAccent,
       ),
@@ -68,13 +79,15 @@ class _SettingPageState extends State<SettingPage> {
                             SizedBox(
                               width: 40,
                               height: 40,
-                              child: CircularProgressIndicator(color: Colors.black),
+                              child: CircularProgressIndicator(
+                                  color: Colors.black),
                             )
-                          else if (settingsController.logoImagePath.value.isNotEmpty)
+                          else if (settingsController
+                              .logoImagePath.value.isNotEmpty)
                             Image.file(
                               File(settingsController.logoImagePath.value),
-                              width: 40,
-                              height: 40,
+                              width: 80,
+                              height: 80,
                               fit: BoxFit.cover,
                             )
                           else
@@ -96,7 +109,8 @@ class _SettingPageState extends State<SettingPage> {
                             ),
                           if (settingsController.logoImagePath.value.isNotEmpty)
                             Positioned(
-                              top: 0,
+                              top: 20,
+                              left: 4,
                               right: 0,
                               child: IconButton(
                                 icon: Icon(Icons.cancel, color: Colors.red),
@@ -114,15 +128,18 @@ class _SettingPageState extends State<SettingPage> {
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                        ), backgroundColor: Colors.blueAccent,
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        ),
+                        backgroundColor: Colors.blueAccent,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       ),
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 10),
-              _buildSwitchTile('Date', settingsController.showDateTime.value, (value) {
+              _buildSwitchTile('Date', settingsController.showDateTime.value,
+                  (value) {
                 settingsController.toggleDateTimeVisibility(value);
               }),
               if (settingsController.showDateTime.value)
@@ -134,7 +151,8 @@ class _SettingPageState extends State<SettingPage> {
                   },
                 ),
               SizedBox(height: 10),
-              _buildSwitchTile('Location', settingsController.showLocation.value, (value) {
+              _buildSwitchTile(
+                  'Location', settingsController.showLocation.value, (value) {
                 settingsController.toggleLocationVisibility(value);
               }),
               if (settingsController.showLocation.value)
@@ -146,7 +164,9 @@ class _SettingPageState extends State<SettingPage> {
                   },
                 ),
               SizedBox(height: 10),
-              _buildSwitchTile('Show Date Background', settingsController.showDB.value, (value) {
+              _buildSwitchTile(
+                  'Show Date Background', settingsController.showDB.value,
+                  (value) {
                 settingsController.toggleDatebVisibility(value);
               }),
               if (settingsController.showDB.value)
@@ -158,7 +178,9 @@ class _SettingPageState extends State<SettingPage> {
                   },
                 ),
               SizedBox(height: 10),
-              _buildSwitchTile('Show Location Background', settingsController.showLB.value, (value) {
+              _buildSwitchTile(
+                  'Show Location Background', settingsController.showLB.value,
+                  (value) {
                 settingsController.toggleLocbVisibility(value);
               }),
               if (settingsController.showLB.value)
@@ -187,7 +209,8 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
-  Widget _buildCard(BuildContext context, {
+  Widget _buildCard(
+    BuildContext context, {
     required String title,
     required bool value,
     required ValueChanged<bool> onChanged,
@@ -218,7 +241,8 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
-  Widget _buildSwitchTile(String title, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildSwitchTile(
+      String title, bool value, ValueChanged<bool> onChanged) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -344,4 +368,3 @@ class _SettingPageState extends State<SettingPage> {
 }
 
 enum ColorType { date, location, topBackground, bottomBackground }
-

@@ -2,7 +2,9 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:dcamera_application/screen/camera_screen.dart';
 import 'package:dcamera_application/services/ad_provider.dart';
+import 'package:dcamera_application/services/permission_handler.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -17,9 +19,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:widget_zoom/widget_zoom.dart';
 
-import 'controller/setting_controller.dart';
-import 'edite.dart';
-import 'main.dart';
+import '../controller/setting_controller.dart';
+import 'edit_screen.dart';
+import '../main.dart';
 
 class MainImagePreviewScreen extends StatefulWidget {
   final XFile imageFile;
